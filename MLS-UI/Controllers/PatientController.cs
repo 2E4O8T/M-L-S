@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MLS_UI.Models;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
@@ -9,19 +11,32 @@ namespace MLS_UI.Controllers
     {
         private readonly ILogger<PatientController> _logger;
         private readonly HttpClient _httpClient;
+        private readonly IHttpContextAccessor _contextAccessor;
 
-        public PatientController(ILogger<PatientController> logger, IHttpClientFactory httpClient)
+        public PatientController(ILogger<PatientController> logger, IHttpClientFactory httpClient, IHttpContextAccessor contextAccessor)
         {
             _logger = logger;
             _httpClient = httpClient.CreateClient();
             _httpClient.BaseAddress = new Uri("https://localhost:6001");
+            _contextAccessor = contextAccessor;
         }
+
 
         [HttpGet]
         public async Task<IActionResult> Index()    //string token
         {
+            // recupere le jwt
+            var token = _contextAccessor.HttpContext.Session.GetString("token");
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return BadRequest("Token is missing");
+            }
+
             // Ajout token dans le header
-            //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+
 
             var request = await _httpClient.GetAsync("/gateway/patientsmanager");
 
@@ -46,10 +61,26 @@ namespace MLS_UI.Controllers
             return View();
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create(PatientDto patient)
         {
+            // recupere le jwt
+            var token = _contextAccessor.HttpContext.Session.GetString("token");
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return BadRequest("Token is missing");
+            }
+
+            // Ajout token dans le header
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+
+
             var content = new StringContent(JsonSerializer.Serialize(patient), Encoding.UTF8, "application/json");
+
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             var response = await _httpClient.PostAsync("/gateway/patientsmanager", content);
 
@@ -67,9 +98,23 @@ namespace MLS_UI.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> Update(int id)
         {
+            // recupere le jwt
+            var token = _contextAccessor.HttpContext.Session.GetString("token");
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return BadRequest("Token is missing");
+            }
+
+            // Ajout token dans le header
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+
+
             var request = await _httpClient.GetAsync($"/gateway/patientsmanager/{id}");
 
             if (request.IsSuccessStatusCode)
@@ -88,9 +133,23 @@ namespace MLS_UI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Update(int id, PatientDto updatedPatient)
         {
+            // recupere le jwt
+            var token = _contextAccessor.HttpContext.Session.GetString("token");
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return BadRequest("Token is missing");
+            }
+
+            // Ajout token dans le header
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+
+
             var content = new StringContent(JsonSerializer.Serialize(updatedPatient), Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PutAsync($"/gateway/patientsmanager/{id}", content);
@@ -111,7 +170,19 @@ namespace MLS_UI.Controllers
 
         public async Task<IActionResult> Delete(int id)
         {
-            // Récupérer les détails du patient à supprimer depuis le microservice
+            // recupere le jwt
+            var token = _contextAccessor.HttpContext.Session.GetString("token");
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return BadRequest("Token is missing");
+            }
+
+            // Ajout token dans le header
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+
+
             var response = await _httpClient.GetAsync($"/gateway/patientsmanager/{id}");
 
             if (response.IsSuccessStatusCode)
@@ -126,9 +197,23 @@ namespace MLS_UI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> ReallyDelete(int id)
         {
+            // recupere le jwt
+            var token = _contextAccessor.HttpContext.Session.GetString("token");
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return BadRequest("Token is missing");
+            }
+
+            // Ajout token dans le header
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+
+
             var response = await _httpClient.DeleteAsync($"/gateway/patientsmanager/{id}");
 
             if (response.IsSuccessStatusCode)
@@ -142,26 +227,5 @@ namespace MLS_UI.Controllers
                 return View("Error");
             }
         }
-        //[HttpPost]
-        //public async Task<IActionResult> Delete(int id)
-        //{
-        //    var response = await _httpClient.DeleteAsync($"/gateway/patientsmanager/{id}");
-
-        //    if (response.IsSuccessStatusCode)
-        //    {
-        //        _logger.LogInformation($"{response.StatusCode} : Patient with ID {id} deleted successfully");
-
-        //        return RedirectToAction("Index");
-        //    }
-        //    else
-        //    {
-        //        _logger.LogError($"{response.StatusCode} : Something went wrong while deleting patient with ID {id}");
-
-        //        return View("Error");
-        //    }
-        //}
-
-
-
     }
 }

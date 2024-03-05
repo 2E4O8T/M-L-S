@@ -13,7 +13,10 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/patientsmanager/{id}",
-      "UpstreamHttpMethod": [ "Get", "Delete", "Put" ]
+      "UpstreamHttpMethod": [ "Get", "Delete", "Put" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     },
     {
       "DownstreamPathTemplate": "/api/patientsmanager",
@@ -25,7 +28,10 @@
         }
       ],
       "UpstreamPathTemplate": "/gateway/patientsmanager",
-      "UpstreamHttpMethod": [ "Get", "Post" ]
+      "UpstreamHttpMethod": [ "Get", "Post", "Put" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
     }
   ]
 }
